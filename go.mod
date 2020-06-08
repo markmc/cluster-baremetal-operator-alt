@@ -3,7 +3,9 @@ module github.com/openshift/cluster-baremetal-operator
 go 1.13
 
 require (
+	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
+	github.com/openshift/client-go v0.0.0-20200116152001-92a2713fa240
 	github.com/openshift/library-go v0.0.0-20200226112728-c954d28e6795
 	github.com/operator-framework/operator-sdk v0.15.2
 	github.com/spf13/pflag v1.0.5

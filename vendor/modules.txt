@@ -50,6 +50,8 @@ github.com/go-openapi/swag
 # github.com/gogo/protobuf v1.3.1
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/sortkeys
+# github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
+github.com/golang/glog
 # github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9
 github.com/golang/groupcache/lru
 # github.com/golang/protobuf v1.3.2
@@ -142,7 +144,12 @@ github.com/openshift/api/user
 github.com/openshift/api/user/v1
 github.com/openshift/api/webconsole
 github.com/openshift/api/webconsole/v1
+# github.com/openshift/client-go v0.0.0-20200116152001-92a2713fa240
+github.com/openshift/client-go/config/clientset/versioned
+github.com/openshift/client-go/config/clientset/versioned/scheme
+github.com/openshift/client-go/config/clientset/versioned/typed/config/v1
 # github.com/openshift/library-go v0.0.0-20200226112728-c954d28e6795
+github.com/openshift/library-go/pkg/config/clusteroperator/v1helpers
 github.com/openshift/library-go/pkg/operator/events
 github.com/openshift/library-go/pkg/operator/resource/resourceapply
 github.com/openshift/library-go/pkg/operator/resource/resourcehelper
