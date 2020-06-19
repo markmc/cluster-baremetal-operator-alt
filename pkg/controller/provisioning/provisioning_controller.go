@@ -144,12 +144,17 @@ func (r *ReconcileProvisioning) Reconcile(request reconcile.Request) (reconcile.
 
 	// Disable ourselves on platforms other than bare metal
 	if infra.Status.Platform != osconfigv1.BareMetalPlatformType {
-		err = syncClusterOperator(r.client, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION"), true, true)
+		err = updateCOStatusDisabled(r.client, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION"))
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 		// We're disabled; don't requeue
 		return reconcile.Result{}, nil
+	}
+
+	err = updateCOStatusProgressing(r.client, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION"))
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
 	// Fetch the Provisioning instance
@@ -194,11 +199,12 @@ func (r *ReconcileProvisioning) Reconcile(request reconcile.Request) (reconcile.
 		reqLogger.Info("Skip reconcile: Deployment already up to date", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
 	}
 
-	err = syncClusterOperator(r.client, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION"), true, false)
 	if err != nil {
+		_ = updateCOStatusDegraded(r.client, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION"))
 		return reconcile.Result{}, err
 	}
 
+	err = updateCOStatusAvailable(r.client, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION"))
 	// Success; don't requeue
 	return reconcile.Result{}, nil
 }
