@@ -14,6 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	osclientset "github.com/openshift/client-go/config/clientset/versioned"
 )
 
 var (
@@ -130,7 +131,7 @@ func setCOStatusCondition(conditionType osconfigv1.ClusterStatusConditionType,
 	}
 }
 
-func updateCOStatusProgressing(c client.Client, targetNamespace string, targetVersions string) error {
+func updateCOStatusProgressing(c client.Client, osClient osclientset.Interface, targetNamespace string, targetVersions string) error {
 	var isProgressing osconfigv1.ConditionStatus
 	var message string
 
@@ -140,12 +141,6 @@ func updateCOStatusProgressing(c client.Client, targetNamespace string, targetVe
 	if err != nil {
 		glog.Errorf("Failed to get or create ClusterOperator: %v", err)
 		return err
-	}
-
-	current := v1helpers.FindStatusCondition(co.Status.Conditions, osconfigv1.OperatorUpgradeable)
-	if current != nil {
-		buf, _ := yaml.Marshal(current)
-		glog.Errorf("CO's current status condition:\n %s", buf)
 	}
 
 	currentVersions := co.Status.Versions
@@ -171,52 +166,40 @@ func updateCOStatusProgressing(c client.Client, targetNamespace string, targetVe
 	for _, cond := range conds {
 		v1helpers.SetStatusCondition(&co.Status.Conditions, cond)
 	}
-	if err = c.Update(context.TODO(), co); err != nil {
-		glog.Errorf("Could not update Status Condition Progressing to True for baremetal ClusterOperator")
-		return err
-	}
-
-	current = v1helpers.FindStatusCondition(co.Status.Conditions, osconfigv1.OperatorProgressing)
-	buf, err := yaml.Marshal(current)
-	glog.Errorf("Reading back baremetal CO when in progress:\n %s", buf)
-	return nil
-
+	_, err = osClient.ConfigV1().ClusterOperators().UpdateStatus(co)
+	return err
 }
 
-func updateCOStatusAvailable(c client.Client, targetNamespace string, targetVersions string) error {
-	message := "Metal3 pod available"
-	reason := "Metal3DeployComplete"
+func updateCOStatusAvailable(c client.Client, osClient osclientset.Interface, targetNamespace string, targetVersions string) error {
+        message := "Metal3 pod available"
+        reason := "Metal3DeployComplete"
 
-	// Find existing CO or create a new one
-	// TODO: what should the version of the ClusterOperator be?
-	co, err := getExistingOrNewCO(c, targetNamespace, targetVersions)
-	if err != nil {
-		glog.Errorf("Failed to get or create ClusterOperator: %v", err)
-		return err
-	}
+        // Find existing CO or create a new one
+        // TODO: what should the version of the ClusterOperator be?
+        co, err := getExistingOrNewCO(c, targetNamespace, targetVersions)
+        if err != nil {
+                glog.Errorf("Failed to get or create ClusterOperator: %v", err)
+                return err
+        }
 
-	conds := []osconfigv1.ClusterOperatorStatusCondition{
-		setCOStatusCondition(osconfigv1.OperatorAvailable, osconfigv1.ConditionTrue, reason, message),
-		setCOStatusCondition(osconfigv1.OperatorProgressing, osconfigv1.ConditionFalse, "", ""),
-		setCOStatusCondition(osconfigv1.OperatorDegraded, osconfigv1.ConditionFalse, "", ""),
-		setCOStatusCondition(OperatorDisabled, osconfigv1.ConditionFalse, "", ""),
-		operatorUpgradeable,
-	}
-	for _, cond := range conds {
-		v1helpers.SetStatusCondition(&co.Status.Conditions, cond)
-	}
-	if err = c.Update(context.TODO(), co); err != nil {
-		glog.Errorf("Could not update Status Condition Available to True for baremetal ClusterOperator")
-		return err
-	}
+        conds := []osconfigv1.ClusterOperatorStatusCondition{
+                setCOStatusCondition(osconfigv1.OperatorAvailable, osconfigv1.ConditionTrue, reason, message),
+                setCOStatusCondition(osconfigv1.OperatorProgressing, osconfigv1.ConditionFalse, "", ""),
+                setCOStatusCondition(osconfigv1.OperatorDegraded, osconfigv1.ConditionFalse, "", ""),
+                setCOStatusCondition(OperatorDisabled, osconfigv1.ConditionFalse, "", ""),
+                operatorUpgradeable,
+        }
+        for _, cond := range conds {
+                v1helpers.SetStatusCondition(&co.Status.Conditions, cond)
+        }
 
-	current := v1helpers.FindStatusCondition(co.Status.Conditions, osconfigv1.OperatorAvailable)
-	buf, err := yaml.Marshal(current)
-	glog.Errorf("Reading back baremetal CO when Available:\n %s", buf)
-	return nil
+        _, err = osClient.ConfigV1().ClusterOperators().UpdateStatus(co)
+
+        return err
 }
 
-func updateCOStatusDegraded(c client.Client, targetNamespace string, targetVersions string) error {
+
+func updateCOStatusDegraded(c client.Client, osClient osclientset.Interface, targetNamespace string, targetVersions string) error {
 	message := "Operator set to degraded"
 	reason := "Metal3DeployFailed"
 
@@ -238,18 +221,11 @@ func updateCOStatusDegraded(c client.Client, targetNamespace string, targetVersi
 	for _, cond := range conds {
 		v1helpers.SetStatusCondition(&co.Status.Conditions, cond)
 	}
-	if err = c.Update(context.TODO(), co); err != nil {
-		glog.Errorf("Could not update Status Condition Degraded to True for baremetal ClusterOperator")
-		return err
-	}
-
-	current := v1helpers.FindStatusCondition(co.Status.Conditions, osconfigv1.OperatorDegraded)
-	buf, _ := yaml.Marshal(current)
-	glog.Errorf("Reading back baremetal CO when Degraded:\n %s", buf)
-	return nil
+	_, err = osClient.ConfigV1().ClusterOperators().UpdateStatus(co)
+	return err
 }
 
-func updateCOStatusDisabled(c client.Client, targetNamespace string, targetVersions string) error {
+func updateCOStatusDisabled(c client.Client, osClient osclientset.Interface, targetNamespace string, targetVersions string) error {
 	message := "Operator is non functional"
 	reason := "UnsupportedPlatform"
 
@@ -271,13 +247,6 @@ func updateCOStatusDisabled(c client.Client, targetNamespace string, targetVersi
 	for _, cond := range conds {
 		v1helpers.SetStatusCondition(&co.Status.Conditions, cond)
 	}
-	if err = c.Update(context.TODO(), co); err != nil {
-		glog.Errorf("Could not update Status Condition Degraded to True for baremetal ClusterOperator")
-		return err
-	}
-
-	current := v1helpers.FindStatusCondition(co.Status.Conditions, OperatorDisabled)
-	buf, _ := yaml.Marshal(current)
-	glog.Errorf("Reading back baremetal CO when Disabled:\n %s", buf)
-	return nil
+	_, err = osClient.ConfigV1().ClusterOperators().UpdateStatus(co)
+	return err
 }

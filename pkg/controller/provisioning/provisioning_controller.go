@@ -24,6 +24,7 @@ import (
 	"github.com/openshift/library-go/pkg/operator/events"
 	"github.com/openshift/library-go/pkg/operator/resource/resourceapply"
 	"github.com/openshift/library-go/pkg/operator/resource/resourcemerge"
+	osclientset "github.com/openshift/client-go/config/clientset/versioned"
 )
 
 var log = logf.Log.WithName("controller_provisioning")
@@ -56,6 +57,7 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	return &ReconcileProvisioning{
 		client:     mgr.GetClient(),
 		appsClient: appsclientv1.NewForConfigOrDie(mgr.GetConfig()),
+		osClient:   osclientset.NewForConfigOrDie(mgr.GetConfig()),
 		scheme:     mgr.GetScheme(),
 		config: &OperatorConfig{
 			TargetNamespace: componentNamespace,
@@ -115,6 +117,7 @@ type ReconcileProvisioning struct {
 	// that reads objects from the cache and writes to the apiserver
 	client     client.Client
 	appsClient *appsclientv1.AppsV1Client
+	osClient   osclientset.Interface
 	scheme     *runtime.Scheme
 	config     *OperatorConfig
 
@@ -130,21 +133,16 @@ func (r *ReconcileProvisioning) Reconcile(request reconcile.Request) (reconcile.
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling Provisioning")
 
-	// provisioning.metal3.io is a singleton
-	if request.Name != baremetalProvisioningCR {
-		reqLogger.Info("Ignoring Provisioning.metal3.io without default name")
-		return reconcile.Result{}, nil
-	}
-
 	infra := &osconfigv1.Infrastructure{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: "cluster"}, infra)
 	if err != nil {
+                reqLogger.Info("Unable to determine Platform that the Operator is running on.")
 		return reconcile.Result{}, err
 	}
 
 	// Disable ourselves on platforms other than bare metal
 	if infra.Status.Platform != osconfigv1.BareMetalPlatformType {
-		err = updateCOStatusDisabled(r.client, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION"))
+		err = updateCOStatusDisabled(r.client, r.osClient, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION"))
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -152,10 +150,16 @@ func (r *ReconcileProvisioning) Reconcile(request reconcile.Request) (reconcile.
 		return reconcile.Result{}, nil
 	}
 
-	err = updateCOStatusProgressing(r.client, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION"))
+	err = updateCOStatusProgressing(r.client, r.osClient, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION"))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
+
+        // provisioning.metal3.io is a singleton
+        if request.Name != baremetalProvisioningCR {
+                reqLogger.Info("Ignoring Provisioning.metal3.io without default name")
+                return reconcile.Result{}, nil
+        }
 
 	// Fetch the Provisioning instance
 	instance := &metal3v1alpha1.Provisioning{}
@@ -200,11 +204,11 @@ func (r *ReconcileProvisioning) Reconcile(request reconcile.Request) (reconcile.
 	}
 
 	if err != nil {
-		_ = updateCOStatusDegraded(r.client, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION"))
+		_ = updateCOStatusDegraded(r.client, r.osClient, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION"))
 		return reconcile.Result{}, err
 	}
 
-	err = updateCOStatusAvailable(r.client, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION"))
+	err = updateCOStatusAvailable(r.client, r.osClient, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION"))
 	// Success; don't requeue
 	return reconcile.Result{}, nil
 }
