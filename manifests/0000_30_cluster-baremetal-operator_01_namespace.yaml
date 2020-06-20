@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: openshift-baremetal
+  name: openshift-machine-api
   annotations:
     openshift.io/node-selector: ""
   labels:
-    name: openshift-baremetal
+    name: openshift-machine-api

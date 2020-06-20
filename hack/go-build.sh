@@ -19,4 +19,4 @@ GLDFLAGS+="-extldflags '-static'"
 eval $(go env)
 
 echo "Building ${REPO}/cmd/manager to build/_output/bin/${WHAT}"
-GO111MODULE=${GO111MODULE} CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} go build ${GOFLAGS} -ldflags "${GLDFLAGS}" -o build/_output/bin/${WHAT} ${REPO}/cmd/manager
+GO111MODULE=${GO111MODULE} CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} go build ${GOFLAGS} -ldflags "${GLDFLAGS}" -o build/_output/bin/${WHAT} ${REPO}/cmd/cluster-baremetal-operator

@@ -1,5 +1,6 @@
 DBG         ?= 0
-REGISTRY    ?= quay.io/markmc/
+USERNAME    ?= $$USER
+REGISTRY    ?= quay.io/$(USERNAME)/
 VERSION     ?= v0.0.1
 IMAGE        = $(REGISTRY)cluster-baremetal-operator
 
