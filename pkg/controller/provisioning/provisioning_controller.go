@@ -20,11 +20,11 @@ import (
 
 	osconfigv1 "github.com/openshift/api/config/v1"
 	osoperatorv1 "github.com/openshift/api/operator/v1"
+	osclientset "github.com/openshift/client-go/config/clientset/versioned"
 	metal3v1alpha1 "github.com/openshift/cluster-baremetal-operator/pkg/apis/metal3/v1alpha1"
 	"github.com/openshift/library-go/pkg/operator/events"
 	"github.com/openshift/library-go/pkg/operator/resource/resourceapply"
 	"github.com/openshift/library-go/pkg/operator/resource/resourcemerge"
-	osclientset "github.com/openshift/client-go/config/clientset/versioned"
 )
 
 var log = logf.Log.WithName("controller_provisioning")
@@ -136,7 +136,7 @@ func (r *ReconcileProvisioning) Reconcile(request reconcile.Request) (reconcile.
 	infra := &osconfigv1.Infrastructure{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: "cluster"}, infra)
 	if err != nil {
-                reqLogger.Info("Unable to determine Platform that the Operator is running on.")
+		reqLogger.Info("Unable to determine Platform that the Operator is running on.")
 		return reconcile.Result{}, err
 	}
 
@@ -155,11 +155,11 @@ func (r *ReconcileProvisioning) Reconcile(request reconcile.Request) (reconcile.
 		return reconcile.Result{}, err
 	}
 
-        // provisioning.metal3.io is a singleton
-        if request.Name != baremetalProvisioningCR {
-                reqLogger.Info("Ignoring Provisioning.metal3.io without default name")
-                return reconcile.Result{}, nil
-        }
+	// provisioning.metal3.io is a singleton
+	if request.Name != baremetalProvisioningCR {
+		reqLogger.Info("Ignoring Provisioning.metal3.io without default name")
+		return reconcile.Result{}, nil
+	}
 
 	// Fetch the Provisioning instance
 	instance := &metal3v1alpha1.Provisioning{}
@@ -195,6 +195,9 @@ func (r *ReconcileProvisioning) Reconcile(request reconcile.Request) (reconcile.
 	expectedGeneration := resourcemerge.ExpectedDeploymentGeneration(deployment, r.generations)
 	_, updated, err := resourceapply.ApplyDeployment(r.appsClient, events.NewLoggingEventRecorder(componentName), deployment, expectedGeneration, false)
 	if err != nil {
+		if err = updateCOStatusDegraded(r.client, r.osClient, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION")); err != nil {
+			reqLogger.Info("Unable to set baremetal ClusterOperator status to Degraded.")
+		}
 		return reconcile.Result{}, err
 	} else if updated {
 		reqLogger.Info("Successfully created or updated Deployment", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
@@ -203,12 +206,9 @@ func (r *ReconcileProvisioning) Reconcile(request reconcile.Request) (reconcile.
 		reqLogger.Info("Skip reconcile: Deployment already up to date", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
 	}
 
-	if err != nil {
-		_ = updateCOStatusDegraded(r.client, r.osClient, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION"))
-		return reconcile.Result{}, err
+	if err = updateCOStatusAvailable(r.client, r.osClient, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION")); err != nil {
+		reqLogger.Info("Unable to set baremetal ClusterOperator status to Available.")
 	}
-
-	err = updateCOStatusAvailable(r.client, r.osClient, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION"))
 	// Success; don't requeue
 	return reconcile.Result{}, nil
 }

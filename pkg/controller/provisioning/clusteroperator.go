@@ -8,13 +8,13 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	osconfigv1 "github.com/openshift/api/config/v1"
+	osclientset "github.com/openshift/client-go/config/clientset/versioned"
 	"github.com/openshift/library-go/pkg/config/clusteroperator/v1helpers"
 	operatorv1helpers "github.com/openshift/library-go/pkg/operator/v1helpers"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	osclientset "github.com/openshift/client-go/config/clientset/versioned"
 )
 
 var (
@@ -171,33 +171,32 @@ func updateCOStatusProgressing(c client.Client, osClient osclientset.Interface, 
 }
 
 func updateCOStatusAvailable(c client.Client, osClient osclientset.Interface, targetNamespace string, targetVersions string) error {
-        message := "Metal3 pod available"
-        reason := "Metal3DeployComplete"
+	message := "Metal3 pod available"
+	reason := "Metal3DeployComplete"
 
-        // Find existing CO or create a new one
-        // TODO: what should the version of the ClusterOperator be?
-        co, err := getExistingOrNewCO(c, targetNamespace, targetVersions)
-        if err != nil {
-                glog.Errorf("Failed to get or create ClusterOperator: %v", err)
-                return err
-        }
+	// Find existing CO or create a new one
+	// TODO: what should the version of the ClusterOperator be?
+	co, err := getExistingOrNewCO(c, targetNamespace, targetVersions)
+	if err != nil {
+		glog.Errorf("Failed to get or create ClusterOperator: %v", err)
+		return err
+	}
 
-        conds := []osconfigv1.ClusterOperatorStatusCondition{
-                setCOStatusCondition(osconfigv1.OperatorAvailable, osconfigv1.ConditionTrue, reason, message),
-                setCOStatusCondition(osconfigv1.OperatorProgressing, osconfigv1.ConditionFalse, "", ""),
-                setCOStatusCondition(osconfigv1.OperatorDegraded, osconfigv1.ConditionFalse, "", ""),
-                setCOStatusCondition(OperatorDisabled, osconfigv1.ConditionFalse, "", ""),
-                operatorUpgradeable,
-        }
-        for _, cond := range conds {
-                v1helpers.SetStatusCondition(&co.Status.Conditions, cond)
-        }
+	conds := []osconfigv1.ClusterOperatorStatusCondition{
+		setCOStatusCondition(osconfigv1.OperatorAvailable, osconfigv1.ConditionTrue, reason, message),
+		setCOStatusCondition(osconfigv1.OperatorProgressing, osconfigv1.ConditionFalse, "", ""),
+		setCOStatusCondition(osconfigv1.OperatorDegraded, osconfigv1.ConditionFalse, "", ""),
+		setCOStatusCondition(OperatorDisabled, osconfigv1.ConditionFalse, "", ""),
+		operatorUpgradeable,
+	}
+	for _, cond := range conds {
+		v1helpers.SetStatusCondition(&co.Status.Conditions, cond)
+	}
 
-        _, err = osClient.ConfigV1().ClusterOperators().UpdateStatus(co)
+	_, err = osClient.ConfigV1().ClusterOperators().UpdateStatus(co)
 
-        return err
+	return err
 }
-
 
 func updateCOStatusDegraded(c client.Client, osClient osclientset.Interface, targetNamespace string, targetVersions string) error {
 	message := "Operator set to degraded"
@@ -226,8 +225,10 @@ func updateCOStatusDegraded(c client.Client, osClient osclientset.Interface, tar
 }
 
 func updateCOStatusDisabled(c client.Client, osClient osclientset.Interface, targetNamespace string, targetVersions string) error {
-	message := "Operator is non functional"
-	reason := "UnsupportedPlatform"
+	disabledMessage := "Operator is non functional"
+	disabledReason := "UnsupportedPlatform"
+	availableMessage := "Operator is available while being disabled"
+	availableReason := "UnsupportedPlatform"
 
 	// Find existing CO or create a new one
 	// TODO: what should the version of the ClusterOperator be?
@@ -238,10 +239,10 @@ func updateCOStatusDisabled(c client.Client, osClient osclientset.Interface, tar
 	}
 
 	conds := []osconfigv1.ClusterOperatorStatusCondition{
-		setCOStatusCondition(osconfigv1.OperatorAvailable, osconfigv1.ConditionFalse, "", ""),
+		setCOStatusCondition(osconfigv1.OperatorAvailable, osconfigv1.ConditionTrue, availableReason, availableMessage),
 		setCOStatusCondition(osconfigv1.OperatorProgressing, osconfigv1.ConditionFalse, "", ""),
 		setCOStatusCondition(osconfigv1.OperatorDegraded, osconfigv1.ConditionFalse, "", ""),
-		setCOStatusCondition(OperatorDisabled, osconfigv1.ConditionTrue, reason, message),
+		setCOStatusCondition(OperatorDisabled, osconfigv1.ConditionTrue, disabledReason, disabledMessage),
 		operatorUpgradeable,
 	}
 	for _, cond := range conds {
