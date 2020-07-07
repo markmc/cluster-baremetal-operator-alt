@@ -1,1 +1,0 @@
-# cluster-baremetal-operator-alt
