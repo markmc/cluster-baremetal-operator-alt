@@ -24,7 +24,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	metal3iov1alpha1 "github.com/cbo/api/v1alpha1"
+	metal3iov1alpha1 "github.com/cluster-baremetal-operator-alt/api/v1alpha1"
 
         "github.com/go-logr/logr"
         "k8s.io/apimachinery/pkg/runtime"

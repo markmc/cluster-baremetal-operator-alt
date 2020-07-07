@@ -1,4 +1,4 @@
-repo: github.com/cbo
+repo: github.com/cluster-baremetal-operator-alt
 resources:
 - group: metal3.io
   kind: Provisioning
