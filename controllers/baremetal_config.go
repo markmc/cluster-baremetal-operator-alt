@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	metal3v1alpha1 "github.com/openshift/cluster-baremetal-operator/pkg/apis/metal3/v1alpha1"
+	metal3v1alpha1 "github.com/openshift/cluster-baremetal-operator/api/v1alpha1"
 )
 
 const (
