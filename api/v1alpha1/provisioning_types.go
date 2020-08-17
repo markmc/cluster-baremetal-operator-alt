@@ -32,58 +32,58 @@ type ProvisioningSpec struct {
 
 // ProvisioningSpec defines the provisioning configuration for Metal3.
 type ProvisioningSpec struct {
-        // ProvisioningInterface is the name of the network interface
-        // on a baremetal server to the provisioning network. It can
-        // have values like eth1 or ens3.
-        ProvisioningInterface string `json:"provisioningInterface,omitempty"`
+	// ProvisioningInterface is the name of the network interface
+	// on a baremetal server to the provisioning network. It can
+	// have values like eth1 or ens3.
+	ProvisioningInterface string `json:"provisioningInterface,omitempty"`
 
-        // ProvisioningIP is the IP address assigned to the
-        // provisioningInterface of the baremetal server. This IP
-        // address should be within the provisioning subnet, and
-        // outside of the DHCP range.
-        ProvisioningIP string `json:"provisioningIP,omitempty"`
+	// ProvisioningIP is the IP address assigned to the
+	// provisioningInterface of the baremetal server. This IP
+	// address should be within the provisioning subnet, and
+	// outside of the DHCP range.
+	ProvisioningIP string `json:"provisioningIP,omitempty"`
 
-        // ProvisioningNetworkCIDR is the network on which the
-        // baremetal nodes are provisioned. The provisioningIP and the
-        // IPs in the dhcpRange all come from within this network.
-        ProvisioningNetworkCIDR string `json:"provisioningNetworkCIDR,omitempty"`
+	// ProvisioningNetworkCIDR is the network on which the
+	// baremetal nodes are provisioned. The provisioningIP and the
+	// IPs in the dhcpRange all come from within this network.
+	ProvisioningNetworkCIDR string `json:"provisioningNetworkCIDR,omitempty"`
 
-        // ProvisioningDHCPExternal indicates whether the DHCP server
-        // for IP addresses in the provisioning DHCP range is present
-        // within the metal3 cluster or external to it.
-        ProvisioningDHCPExternal bool `json:"provisioningDHCPExternal,omitempty"`
+	// ProvisioningDHCPExternal indicates whether the DHCP server
+	// for IP addresses in the provisioning DHCP range is present
+	// within the metal3 cluster or external to it.
+	ProvisioningDHCPExternal bool `json:"provisioningDHCPExternal,omitempty"`
 
-        // ProvisioningDHCPRange needs to be interpreted along with
-        // ProvisioningDHCPExternal. If the value of
-        // provisioningDHCPExternal is set to False, then
-        // ProvisioningDHCPRange represents the range of IP addresses
-        // that the DHCP server running within the metal3 cluster can
-        // use while provisioning baremetal servers. If the value of
-        // ProvisioningDHCPExternal is set to True, then the value of
-        // ProvisioningDHCPRange will be ignored. When the value of
-        // ProvisioningDHCPExternal is set to False, indicating an
-        // internal DHCP server and the value of ProvisioningDHCPRange
-        // is not set, then the DHCP range is taken to be the default
-        // range which goes from .10 to .100 of the
-        // ProvisioningNetworkCIDR. This is the only value in all of
-        // the Provisioning configuration that can be changed after
-        // the installer has created the CR. This value needs to be
-        // two comma sererated IP addresses within the
-        // ProvisioningNetworkCIDR where the 1st address represents
-        // the start of the range and the 2nd address represents the
-        // last usable address in the  range.
-        ProvisioningDHCPRange string `json:"provisioningDHCPRange,omitempty"`
+	// ProvisioningDHCPRange needs to be interpreted along with
+	// ProvisioningDHCPExternal. If the value of
+	// provisioningDHCPExternal is set to False, then
+	// ProvisioningDHCPRange represents the range of IP addresses
+	// that the DHCP server running within the metal3 cluster can
+	// use while provisioning baremetal servers. If the value of
+	// ProvisioningDHCPExternal is set to True, then the value of
+	// ProvisioningDHCPRange will be ignored. When the value of
+	// ProvisioningDHCPExternal is set to False, indicating an
+	// internal DHCP server and the value of ProvisioningDHCPRange
+	// is not set, then the DHCP range is taken to be the default
+	// range which goes from .10 to .100 of the
+	// ProvisioningNetworkCIDR. This is the only value in all of
+	// the Provisioning configuration that can be changed after
+	// the installer has created the CR. This value needs to be
+	// two comma sererated IP addresses within the
+	// ProvisioningNetworkCIDR where the 1st address represents
+	// the start of the range and the 2nd address represents the
+	// last usable address in the  range.
+	ProvisioningDHCPRange string `json:"provisioningDHCPRange,omitempty"`
 
-        // ProvisioningOSDownloadURL is the location from which the OS
-        // Image used to boot baremetal host machines can be
-        // downloaded by the metal3 cluster.
-        ProvisioningOSDownloadURL string `json:"provisioningOSDownloadURL,omitempty"`
+	// ProvisioningOSDownloadURL is the location from which the OS
+	// Image used to boot baremetal host machines can be
+	// downloaded by the metal3 cluster.
+	ProvisioningOSDownloadURL string `json:"provisioningOSDownloadURL,omitempty"`
 }
 
 // ProvisioningStatus defines the observed values from the
 // cluster. They may not be overridden.
 type ProvisioningStatus struct {
-        operatorv1.OperatorStatus `json:",inline"`
+	operatorv1.OperatorStatus `json:",inline"`
 }
 
 // Provisioning contains configuration used by the Provisioning

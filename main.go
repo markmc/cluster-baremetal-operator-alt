@@ -36,17 +36,17 @@ var (
 
 // Change below variables to serve metrics on different host or port.
 var (
-        metricsHost               = "0.0.0.0"
-        metricsPort         int32 = 8383
-        operatorMetricsPort int32 = 8686
+	metricsHost               = "0.0.0.0"
+	metricsPort         int32 = 8383
+	operatorMetricsPort int32 = 8686
 )
 var log = logf.Log.WithName("cmd")
 
 func printVersion() {
-        log.Info(fmt.Sprintf("Operator Version: %s", version.Version))
-        log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
-        log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
-        log.Info(fmt.Sprintf("Version of operator-sdk: %v", sdkVersion.Version))
+	log.Info(fmt.Sprintf("Operator Version: %s", version.Version))
+	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
+	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
+	log.Info(fmt.Sprintf("Version of operator-sdk: %v", sdkVersion.Version))
 }
 
 func init() {
