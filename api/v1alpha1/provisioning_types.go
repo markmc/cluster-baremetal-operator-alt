@@ -21,15 +21,6 @@ import (
 	operatorv1 "github.com/openshift/api/operator/v1"
 )
 
-// ProvisioningSpec defines the desired state of Provisioning
-type ProvisioningSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of Provisioning. Edit Provisioning_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
-}
-
 // ProvisioningSpec defines the provisioning configuration for Metal3.
 type ProvisioningSpec struct {
 	// ProvisioningInterface is the name of the network interface
