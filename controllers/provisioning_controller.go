@@ -20,28 +20,14 @@ import (
 	"os"
 
 	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	appsclientv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	osconfigv1 "github.com/openshift/api/config/v1"
 	osoperatorv1 "github.com/openshift/api/operator/v1"
@@ -86,21 +72,28 @@ type ProvisioningReconciler struct {
 	// Track latest generation of our resources in memory, which means
 	// we will re-apply on restart of the operator.
 	// TODO: persist these to CR using operator.openshift.io OperatorStatus
-	// TODO : Do we need this? It was not part of auto generated code
-	//generations []osoperatorv1.GenerationStatus
+	generations []osoperatorv1.GenerationStatus
+}
+
+func NewProvisioningReconciler(client client.Client, scheme *runtime.Scheme, log logr.Logger) *ProvisioningReconciler {
+	return &ProvisioningReconciler{
+		client: client,
+		scheme: scheme,
+		log:    log,
+	}
 }
 
 // +kubebuilder:rbac:groups=metal3.io.,resources=provisionings,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=metal3.io.,resources=provisionings/status,verbs=get;update;patch
 
-func (r *ProvisioningReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx = context.Background()
-	log = r.Log.WithValues("provisioning", req.NamespacedName)
+func (r *ProvisioningReconciler) Reconcile(request ctrl.Request) (ctrl.Result, error) {
+	ctx := context.Background()
+	reqLogger := log.WithValues("provisioning", request.NamespacedName)
 
 	infra := &osconfigv1.Infrastructure{}
 	err := r.client.Get(ctx, types.NamespacedName{Name: "cluster"}, infra)
 	if err != nil {
-		log.Info("Unable to determine Platform that the Operator is running on.")
+		reqLogger.Info("Unable to determine Platform that the Operator is running on.")
 		return ctrl.Result{}, err
 	}
 
@@ -120,8 +113,8 @@ func (r *ProvisioningReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 	}
 
 	// provisioning.metal3.io is a singleton
-	if req.Name != baremetalProvisioningCR {
-		log.Info("Ignoring Provisioning.metal3.io without default name")
+	if request.Name != baremetalProvisioningCR {
+		reqLogger.Info("Ignoring Provisioning.metal3.io without default name")
 		return ctrl.Result{}, nil
 	}
 
@@ -148,10 +141,10 @@ func (r *ProvisioningReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 		reqLogger.Info("Creating a new Maridb password secret", "Secret.Namespace", secret.Namespace, "Deployment.Name", secret.Name)
 		err := r.client.Create(ctx, secret)
 		if err != nil {
-			return ctx.Result{}, err
+			return ctrl.Result{}, err
 		}
 	} else if err != nil {
-		return ctx.Result{}, err
+		return ctrl.Result{}, err
 	}
 
 	// Define a new Deployment object
@@ -162,7 +155,7 @@ func (r *ProvisioningReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 		if err = updateCOStatusDegraded(r.client, r.osClient, r.config.TargetNamespace, os.Getenv("OPERATOR_VERSION")); err != nil {
 			reqLogger.Info("Unable to set baremetal ClusterOperator status to Degraded.")
 		}
-		return reconcile.Result{}, err
+		return ctrl.Result{}, err
 	} else if updated {
 		reqLogger.Info("Successfully created or updated Deployment", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
 		resourcemerge.SetDeploymentGeneration(&r.generations, deployment)

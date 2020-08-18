@@ -17,7 +17,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
+	goruntime "runtime"
 
 	metal3iov1alpha1 "github.com/openshift/cluster-baremetal-operator/api/v1alpha1"
 	"github.com/openshift/cluster-baremetal-operator/controllers"
@@ -30,8 +32,8 @@ import (
 )
 
 var (
-	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
+	scheme   = runtime.NewScheme()
 )
 
 // Change below variables to serve metrics on different host or port.
@@ -40,13 +42,12 @@ var (
 	metricsPort         int32 = 8383
 	operatorMetricsPort int32 = 8686
 )
-var log = logf.Log.WithName("cmd")
+var operatorVersion = "0.0.1"
 
 func printVersion() {
-	log.Info(fmt.Sprintf("Operator Version: %s", version.Version))
-	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
-	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
-	log.Info(fmt.Sprintf("Version of operator-sdk: %v", sdkVersion.Version))
+	setupLog.Info(fmt.Sprintf("Operator Version: %s", operatorVersion))
+	setupLog.Info(fmt.Sprintf("Go Version: %s", goruntime.Version()))
+	setupLog.Info(fmt.Sprintf("Go OS/Arch: %s/%s", goruntime.GOOS, goruntime.GOARCH))
 }
 
 func init() {
@@ -79,11 +80,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.ProvisioningReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Provisioning"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+	reconciler := controllers.NewProvisioningReconciler(
+		mgr.GetClient(),
+		mgr.GetScheme(),
+		ctrl.Log.WithName("controllers").WithName("Provisioning"))
+	if err = reconciler.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Provisioning")
 		os.Exit(1)
 	}
