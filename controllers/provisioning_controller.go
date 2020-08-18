@@ -80,6 +80,17 @@ func NewProvisioningReconciler(client client.Client, scheme *runtime.Scheme, log
 		client: client,
 		scheme: scheme,
 		log:    log,
+		config: &OperatorConfig{
+			TargetNamespace: componentNamespace,
+			BaremetalControllers: BaremetalControllers{
+				BaremetalOperator:         os.Getenv("BAREMETAL_IMAGE"),
+				Ironic:                    os.Getenv("IRONIC_IMAGE"),
+				IronicInspector:           os.Getenv("IRONIC_INSPECTOR_IMAGE"),
+				IronicIpaDownloader:       os.Getenv("IRONIC_IPA_DOWNLOADER_IMAGE"),
+				IronicMachineOsDownloader: os.Getenv("IRONIC_MACHINE_OS_DOWNLOADER_IMAGE"),
+				IronicStaticIpManager:     os.Getenv("IRONIC_STATIC_IP_MANAGER_IMAGE"),
+			},
+		},
 	}
 }
 
