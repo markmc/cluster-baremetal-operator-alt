@@ -21,15 +21,18 @@ import (
 	"os"
 	goruntime "runtime"
 
-	osconfigv1 "github.com/openshift/api/config/v1"
-	metal3iov1alpha1 "github.com/openshift/cluster-baremetal-operator/api/v1alpha1"
-	"github.com/openshift/cluster-baremetal-operator/controllers"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	appsclientv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	// +kubebuilder:scaffold:imports
+
+	osconfigv1 "github.com/openshift/api/config/v1"
+	osclientset "github.com/openshift/client-go/config/clientset/versioned"
+	metal3iov1alpha1 "github.com/openshift/cluster-baremetal-operator/api/v1alpha1"
+	"github.com/openshift/cluster-baremetal-operator/controllers"
 )
 
 var (
@@ -83,6 +86,8 @@ func main() {
 
 	reconciler := controllers.NewProvisioningReconciler(
 		mgr.GetClient(),
+		appsclientv1.NewForConfigOrDie(mgr.GetConfig()),
+		osclientset.NewForConfigOrDie(mgr.GetConfig()),
 		mgr.GetScheme(),
 		ctrl.Log.WithName("controllers").WithName("Provisioning"))
 	if err = reconciler.SetupWithManager(mgr); err != nil {

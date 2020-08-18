@@ -75,11 +75,13 @@ type ProvisioningReconciler struct {
 	generations []osoperatorv1.GenerationStatus
 }
 
-func NewProvisioningReconciler(client client.Client, scheme *runtime.Scheme, log logr.Logger) *ProvisioningReconciler {
+func NewProvisioningReconciler(client client.Client, appsClient *appsclientv1.AppsV1Client, osClient osclientset.Interface, scheme *runtime.Scheme, log logr.Logger) *ProvisioningReconciler {
 	return &ProvisioningReconciler{
-		client: client,
-		scheme: scheme,
-		log:    log,
+		client:     client,
+		appsClient: appsClient,
+		osClient:   osClient,
+		scheme:     scheme,
+		log:        log,
 		config: &OperatorConfig{
 			TargetNamespace: componentNamespace,
 			BaremetalControllers: BaremetalControllers{
