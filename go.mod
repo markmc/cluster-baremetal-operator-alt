@@ -5,17 +5,28 @@ go 1.13
 require (
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-logr/logr v0.1.0
+	github.com/go-logr/zapr v0.1.1 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
+	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
+	github.com/google/go-cmp v0.3.1 // indirect
+	github.com/hashicorp/golang-lru v0.5.3 // indirect
+	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/onsi/ginkgo v1.10.1
 	github.com/onsi/gomega v1.7.0
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
 	github.com/openshift/client-go v0.0.0-20200116152001-92a2713fa240
 	github.com/openshift/library-go v0.0.0-20200226112728-c954d28e6795
-	github.com/operator-framework/operator-sdk v0.15.2
-	github.com/spf13/pflag v1.0.5
+	github.com/prometheus/client_golang v1.2.1 // indirect
+	go.uber.org/atomic v1.4.0 // indirect
+	go.uber.org/zap v1.10.0 // indirect
+	golang.org/x/crypto v0.0.0-20191028145041-f83a4685e152 // indirect
+	golang.org/x/sys v0.0.0-20191028164358-195ce5e7f934 // indirect
+	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
+	google.golang.org/appengine v1.6.5 // indirect
 	k8s.io/api v0.17.3
 	k8s.io/apimachinery v0.17.3
 	k8s.io/client-go v12.0.0+incompatible
+	k8s.io/kube-openapi v0.0.0-20190918143330-0270cf2f1c1d // indirect
 	k8s.io/utils v0.0.0-20191114184206-e782cd3c129f
 	sigs.k8s.io/controller-runtime v0.4.0
 )
