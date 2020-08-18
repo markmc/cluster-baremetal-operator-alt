@@ -21,6 +21,7 @@ import (
 	"os"
 	goruntime "runtime"
 
+	osconfigv1 "github.com/openshift/api/config/v1"
 	metal3iov1alpha1 "github.com/openshift/cluster-baremetal-operator/api/v1alpha1"
 	"github.com/openshift/cluster-baremetal-operator/controllers"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -52,7 +53,7 @@ func printVersion() {
 
 func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
-
+	_ = osconfigv1.Install(scheme)
 	_ = metal3iov1alpha1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
